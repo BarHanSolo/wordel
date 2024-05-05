@@ -9,10 +9,10 @@ import org.openqa.selenium.support.ui.WebDriverWait
 import java.time.Duration
 
 class PL_SgjpDictionaryScraper: DictionaryScraper {
-    override fun start() {
-        val driver: WebDriver = ChromeDriver();
-        val url = "http://sgjp.pl/leksemy/#9670/akcja";
+    override val driver: WebDriver = ChromeDriver();
+    override val url = "http://sgjp.pl/leksemy/#9670/akcja";
 
+    override fun start() {
         driver.get(url);
 
         val wait = WebDriverWait(driver, Duration.ofSeconds(60));
@@ -31,5 +31,9 @@ class PL_SgjpDictionaryScraper: DictionaryScraper {
         println(keywords);
 
         driver.quit();
+    }
+
+    private fun nextKeywordsPage() {
+
     }
 }
