@@ -57,13 +57,16 @@ class PLSgjpDictionaryScraper: DictionaryScraper {
         dropdownMenus.removeFirst(); // First one is not part of filters
 
         setFilterKey(dropdownMenus[3], "Klasa leksemów");
+        randomWait();
         setFilterKey(dropdownMenus[6], "Pospolitość");
 
         dropdownMenus = driver.findElements(By.cssSelector(".ui-selectmenu-dropdown, .ui-multiselect2"));
         dropdownMenus.removeFirst(); // First one is not part of filters
 
+        randomWait();
 
         setFilterValues(dropdownMenus[5], listOf("rzeczownik", "przymiotnik", "liczebnik"));
+        randomWait();
         setFilterValues(
             dropdownMenus[8],
             listOf(
@@ -87,19 +90,20 @@ class PLSgjpDictionaryScraper: DictionaryScraper {
     private fun setFilterValues(filterElement: WebElement, filterValueTexts: List<String> ) {
         clickOn(filterElement);
         val filtersDropdownMenuContent = getFiltersCheckboxesContent();
-        println(filtersDropdownMenuContent.map { it.tagName });
         filterValueTexts.forEach{text ->
             val span = findElementByText(filtersDropdownMenuContent, text);
             val label = getParentOf(span);
-            println("SPAN -- ${span.text}");
-            println("TEXT -- ${text}");
             val input = label.findElement(By.tagName("input"));
-
+            println("SPAN -- ${span.text}");
+            println("LABEL -- ${label.findElement(By.tagName("span")).text}")
+            println("TEXT -- ${text}");
             println("INPUT -- ${input.tagName}")
+
 
             clickOn(input);
             randomWait();
         }
+
         clickOn(filterElement);
     }
 
@@ -121,7 +125,6 @@ class PLSgjpDictionaryScraper: DictionaryScraper {
         }
 
         if (element === null) {
-            println(elementList);
             elementList.forEach { el ->
                 element = el.findElement(By.xpath("//*[text()='${text}']"))
             }
@@ -161,11 +164,11 @@ class PLSgjpDictionaryScraper: DictionaryScraper {
     }
 
     private fun getParentOf(el: WebElement): WebElement {
-        return js.executeScript("return arguments[0].parentElement", el) as WebElement;
+        return el.findElement(By.xpath("./.."));
     }
 
     private fun randomWait() {
-        val randomMs = Random.nextLong(50, 300);
+        val randomMs = Random.nextLong(200, 400);
         Thread.sleep(randomMs);
     }
 
