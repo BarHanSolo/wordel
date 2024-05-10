@@ -2,6 +2,7 @@ package com.wordel.br.scrapers.implementations
 
 import com.wordel.br.scrapers.DictionaryScraper
 import org.openqa.selenium.By
+import org.openqa.selenium.Dimension
 import org.openqa.selenium.JavascriptExecutor
 import org.openqa.selenium.WebDriver
 import org.openqa.selenium.WebElement
@@ -21,6 +22,7 @@ class PLSgjpDictionaryScraper: DictionaryScraper {
     private val loadingSpinnerSelector = "#left > div:nth-child(2) > canvas";
 
     override fun start() {
+        driver.manage().window().size = Dimension(1366, 768);
         driver.get(url);
 
         wait.until(ExpectedConditions.presenceOfElementLocated(By.tagName("body")));
@@ -79,15 +81,24 @@ class PLSgjpDictionaryScraper: DictionaryScraper {
         clickOn(filterElement);
         val filtersDropdownMenuContent = getFiltersDropdownContent();
         val filterDropdownElement = findElementByText(filtersDropdownMenuContent, filterText);
-        println(filterDropdownElement.text);
         clickOn(filterDropdownElement);
     }
 
     private fun setFilterValues(filterElement: WebElement, filterValueTexts: List<String> ) {
         clickOn(filterElement);
-        val filtersDropdownMenuContent = getFiltersDropdownContent();
+        val filtersDropdownMenuContent = getFiltersCheckboxesContent();
+        println(filtersDropdownMenuContent.map { it.tagName });
         filterValueTexts.forEach{text ->
-            clickOn(findElementByText(filtersDropdownMenuContent, text));
+            val span = findElementByText(filtersDropdownMenuContent, text);
+            val label = getParentOf(span);
+            println("SPAN -- ${span.text}");
+            println("TEXT -- ${text}");
+            val input = label.findElement(By.tagName("input"));
+
+            println("INPUT -- ${input.tagName}")
+
+            clickOn(input);
+            randomWait();
         }
         clickOn(filterElement);
     }
@@ -98,16 +109,29 @@ class PLSgjpDictionaryScraper: DictionaryScraper {
         return dropdownMenuContent;
     }
 
+    private fun getFiltersCheckboxesContent(): List<WebElement> {
+        val dropdownCheckboxesContent = driver.findElements(By.cssSelector(".ui-multiselect-checkboxes > li"));
+
+        return dropdownCheckboxesContent;
+    }
+
     private fun findElementByText(elementList: List<WebElement>, text: String): WebElement {
-        val element = elementList.find { el ->
-            el.text.equals(text)
+        var element = elementList.find { el ->
+            el.text.trim() == text
+        }
+
+        if (element === null) {
+            println(elementList);
+            elementList.forEach { el ->
+                element = el.findElement(By.xpath("//*[text()='${text}']"))
+            }
         }
 
         if (element == null) {
             throw Error("No element with text $text found")
         }
 
-        return element;
+        return element as WebElement;
     }
 
     private fun goToNextKeywordsPage() {
@@ -131,8 +155,18 @@ class PLSgjpDictionaryScraper: DictionaryScraper {
     private fun clickOn(el: WebElement) {
         js.executeScript(
             "arguments[0].click();" +
-                "arguments[0].dispatchEvent(new MouseEvent('mousedown'));",
+                "arguments[0].dispatchEvent(new MouseEvent('mousedown'));" +
+                "arguments[0].dispatchEvent(new MouseEvent('mouseup'));",
             el);
+    }
+
+    private fun getParentOf(el: WebElement): WebElement {
+        return js.executeScript("return arguments[0].parentElement", el) as WebElement;
+    }
+
+    private fun randomWait() {
+        val randomMs = Random.nextLong(50, 300);
+        Thread.sleep(randomMs);
     }
 
     private fun getDriverOptions(): ChromeOptions {
